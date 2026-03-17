@@ -1,11 +1,35 @@
-# MeetLink
+# MeetLink - Open Source Scheduling & Booking Platform | Calendly Alternative
 
-**Self-Hosted Scheduling Platform** - A comprehensive Calendly alternative with enterprise-grade features.
+> **Self-hosted meeting scheduler, appointment booking system, and calendar management platform. A free, open-source Calendly alternative with enterprise-grade features.**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/141stfighterwing-collab/meetlink)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](docker-compose.yml)
-[![PostgreSQL](https://img.shields.io/badge/postgresql-15%2B-blue.svg)](https://www.postgresql.org/)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?style=flat-square)](https://github.com/141stfighterwing-collab/meetlink)
+[![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
+[![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg?style=flat-square)](docker-compose.yml)
+[![PostgreSQL](https://img.shields.io/badge/postgresql-15%2B-blue.svg?style=flat-square)](https://www.postgresql.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg?style=flat-square)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](CONTRIBUTING.md)
+
+**Keywords:** `scheduling software` `appointment booking` `calendly alternative` `meeting scheduler` `self-hosted` `open source` `calendar booking` `time management` `online scheduling` `booking system` `calendar integration` `video conferencing` `timezone scheduling`
+
+---
+
+## 🚀 Why MeetLink?
+
+Looking for a **Calendly alternative**? MeetLink is the open-source solution you've been searching for!
+
+| Feature | MeetLink | Calendly | Cal.com |
+|---------|----------|----------|---------|
+| **Self-hosted** | ✅ Full control | ❌ Cloud only | ✅ Self-host |
+| **Free forever** | ✅ 100% free | 💰 $8-16/mo | ✅ Free tier |
+| **Unlimited bookings** | ✅ No limits | 💰 Paid only | ✅ No limits |
+| **Data ownership** | ✅ Your server | ❌ Their servers | ✅ Your server |
+| **Custom themes** | ✅ 6 themes | 💰 Paid only | ✅ Customizable |
+| **API access** | ✅ Full API | 💰 Paid only | ✅ Full API |
+| **Calendar sync** | ✅ Google, Outlook | ✅ Yes | ✅ Yes |
+| **Video conferencing** | ✅ Zoom, Teams | ✅ Yes | ✅ Yes |
+| **Team scheduling** | ✅ Coming soon | ✅ Yes | ✅ Yes |
+| **Enterprise security** | ✅ RLS, Audit logs | 💰 Enterprise | ✅ Yes |
 
 ---
 
@@ -550,7 +574,7 @@ services:
   app:
     build: .
     ports:
-      - "3000:3132"
+      - "3132:3132"
     environment:
       - DATABASE_URL=postgresql://meetlink:${DB_PASSWORD}@postgres:5432/meetlink
     depends_on:
