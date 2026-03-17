@@ -12,6 +12,8 @@ import type {
   Stats,
   Schedule
 } from '@/types';
+import type { ThemeName, Theme } from '@/lib/themes';
+import { themes, getTheme, applyTheme, getStoredTheme } from '@/lib/themes';
 
 interface AppState {
   // Navigation
@@ -19,8 +21,10 @@ interface AppState {
   setCurrentView: (view: ViewMode) => void;
   
   // Theme
-  theme: 'light' | 'dark';
-  toggleTheme: () => void;
+  themeName: ThemeName;
+  theme: Theme;
+  setTheme: (name: ThemeName) => void;
+  availableThemes: Theme[];
   
   // User (mock for demo)
   user: {
@@ -94,14 +98,26 @@ interface AppState {
   setShowWorkflowModal: (show: boolean) => void;
 }
 
+// Initialize with stored theme or default
+const initialThemeName = typeof window !== 'undefined' ? getStoredTheme() : 'light';
+const initialTheme = getTheme(initialThemeName);
+
 export const useAppStore = create<AppState>((set) => ({
   // Navigation
   currentView: 'dashboard',
   setCurrentView: (view) => set({ currentView: view }),
   
   // Theme
-  theme: 'light',
-  toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
+  themeName: initialThemeName,
+  theme: initialTheme,
+  availableThemes: themes,
+  setTheme: (name) => {
+    const newTheme = getTheme(name);
+    if (typeof window !== 'undefined') {
+      applyTheme(newTheme);
+    }
+    set({ themeName: name, theme: newTheme });
+  },
   
   // User
   user: {

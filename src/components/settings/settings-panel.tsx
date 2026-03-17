@@ -19,25 +19,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 import {
   User,
   Bell,
   Globe,
   Shield,
   Key,
-  Moon,
-  Sun,
   Camera,
   Save,
   Mail,
   Phone,
-  Building,
-  Globe2,
-  Clock,
 } from 'lucide-react';
 
 export function SettingsPanel() {
-  const { user, theme, toggleTheme } = useAppStore();
+  const { user } = useAppStore();
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -422,63 +418,59 @@ export function SettingsPanel() {
         </TabsContent>
 
         {/* Appearance Tab */}
-        <TabsContent value="appearance">
+        <TabsContent value="appearance" className="space-y-6">
+          <ThemeSwitcher />
+          
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center">
-                {theme === 'light' ? <Sun className="h-5 w-5 mr-2" /> : <Moon className="h-5 w-5 mr-2" />}
-                Appearance
-              </CardTitle>
-              <CardDescription>Customize how MeetLink looks</CardDescription>
+              <CardTitle className="text-base">Calendar Preferences</CardTitle>
+              <CardDescription>Configure your calendar display settings</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-slate-700">Dark Mode</p>
-                  <p className="text-sm text-slate-500">
-                    Switch between light and dark theme
-                  </p>
-                </div>
-                <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
-              </div>
-
-              <Separator />
-
               <div>
-                <Label className="text-base font-medium text-slate-700">Theme Color</Label>
-                <p className="text-sm text-slate-500 mb-4">
-                  Choose your primary accent color
-                </p>
-                <div className="flex space-x-3">
-                  {['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899'].map(
-                    (color) => (
-                      <button
-                        key={color}
-                        className={`w-10 h-10 rounded-full border-2 transition-all ${
-                          color === '#10B981'
-                            ? 'border-slate-800 scale-110'
-                            : 'border-transparent'
-                        }`}
-                        style={{ backgroundColor: color }}
-                      />
-                    )
-                  )}
-                </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <Label className="text-base font-medium text-slate-700">Calendar View</Label>
-                <p className="text-sm text-slate-500 mb-4">Default calendar view</p>
+                <Label className="text-base font-medium">Default Calendar View</Label>
+                <p className="text-sm text-muted-foreground mb-4">Choose your preferred calendar layout</p>
                 <Select defaultValue="week">
                   <SelectTrigger className="w-48">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="month">Month</SelectItem>
-                    <SelectItem value="week">Week</SelectItem>
-                    <SelectItem value="day">Day</SelectItem>
+                    <SelectItem value="month">Month View</SelectItem>
+                    <SelectItem value="week">Week View</SelectItem>
+                    <SelectItem value="day">Day View</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              <div>
+                <Label className="text-base font-medium">Time Format</Label>
+                <p className="text-sm text-muted-foreground mb-4">How times are displayed</p>
+                <Select defaultValue="12h">
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="12h">12-hour (AM/PM)</SelectItem>
+                    <SelectItem value="24h">24-hour</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              <div>
+                <Label className="text-base font-medium">Week Starts On</Label>
+                <p className="text-sm text-muted-foreground mb-4">First day of the week</p>
+                <Select defaultValue="sunday">
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sunday">Sunday</SelectItem>
+                    <SelectItem value="monday">Monday</SelectItem>
+                    <SelectItem value="saturday">Saturday</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
