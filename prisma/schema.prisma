@@ -1,0 +1,686 @@
+// MeetLink - Self-hosted Scheduling Application
+// Version: 1.0.0
+// Database Schema for PostgreSQL (SQLite for development)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  username      String?   @unique
+  passwordHash  String?
+  avatar        String?
+  timezone      String    @default("UTC")
+  locale        String    @default("en")
+  
+  // Professional email validation settings
+  requireProfessionalEmail Boolean @default(true)
+  allowedEmailDomains      String? // JSON array of allowed domains
+  
+  // Profile
+  bio           String?
+  company       String?
+  phone         String?
+  website       String?
+  
+  // Settings
+  defaultSlotDuration    Int     @default(30) // minutes
+  defaultBufferBefore    Int     @default(0)  // minutes
+  defaultBufferAfter     Int     @default(0)  // minutes
+  dailyBookingLimit      Int?
+  weeklyBookingLimit     Int?
+  
+  // Subscription & Role
+  role          String    @default("USER") // USER, ADMIN, SUPER_ADMIN
+  plan          String    @default("FREE") // FREE, PRO, ENTERPRISE
+  
+  // Timestamps
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+  
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  eventTypes    EventType[]
+  bookings      Booking[]       @relation("HostBookings")
+  guestBookings Booking[]       @relation("GuestBookings")
+  availability  Availability[]
+  calendars     Calendar[]
+  contacts      Contact[]
+  contactGroups ContactGroup[]
+  workflows     Workflow[]
+  auditLogs     AuditLog[]
+  apiKeys       ApiKey[]
+  notifications Notification[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  key         String   @unique
+  permissions String?  // JSON array of permissions
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([key])
+}
+
+// ============================================================================
+// EVENT TYPES
+// ============================================================================
+
+model EventType {
+  id              String   @id @default(cuid())
+  userId          String
+  
+  // Basic Info
+  name            String
+  slug            String
+  description     String?
+  color           String   @default("#3B82F6")
+  icon            String?
+  
+  // Duration & Scheduling
+  duration        Int      @default(30) // minutes
+  slotDuration    Int?     // Override user default
+  
+  // Event Type
+  type            String   @default("ONE_ON_ONE") // ONE_ON_ONE, GROUP, ROUND_ROBIN, COLLECTIVE
+  maxAttendees    Int?
+  seatsPerSlot    Int      @default(1)
+  
+  // Buffer Settings
+  bufferBefore    Int      @default(0)
+  bufferAfter     Int      @default(0)
+  
+  // Limits
+  dailyLimit      Int?
+  weeklyLimit     Int?
+  minBookingNotice Int?    // hours before event
+  maxBookingWindow Int?    // days in future
+  
+  // Availability
+  availabilityId  String?
+  
+  // Location
+  locationType    String   @default("IN_PERSON") // IN_PERSON, PHONE, VIDEO, CUSTOM
+  locationDetails String?  // JSON for custom locations
+  
+  // Video Conferencing
+  videoProvider   String?  // ZOOM, TEAMS, GOOGLE_MEET, CUSTOM
+  videoLink       String?
+  autoGenerateVideo Boolean @default(false)
+  
+  // Booking Settings
+  requiresConfirmation Boolean @default(false)
+  allowRescheduling    Boolean @default(true)
+  allowCancellation    Boolean @default(true)
+  cancellationWindow   Int?    // hours before event
+  
+  // Questions & Forms
+  customQuestions String?  // JSON array of questions
+  
+  // Routing (for round-robin)
+  routingFormId   String?
+  routingRules    String?  // JSON routing configuration
+  roundRobinStrategy String? // ROUND_ROBIN, LEAST_BOOKED, RANDOM
+  
+  // Stats
+  totalBookings   Int      @default(0)
+  
+  // Status
+  isActive        Boolean  @default(true)
+  isPublic        Boolean  @default(true)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings        Booking[]
+  availability    Availability? @relation(fields: [availabilityId], references: [id])
+  teamMembers     EventTypeTeamMember[]
+
+  @@unique([userId, slug])
+  @@index([userId])
+  @@index([slug])
+}
+
+model EventTypeTeamMember {
+  id          String   @id @default(cuid())
+  eventTypeId String
+  userId      String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  
+  eventType   EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([eventTypeId, userId])
+  @@index([eventTypeId])
+}
+
+// ============================================================================
+// AVAILABILITY
+// ============================================================================
+
+model Availability {
+  id          String   @id @default(cuid())
+  userId      String?
+  name        String
+  description String?
+  timezone    String   @default("UTC")
+  
+  // Default availability (can be overridden by Schedule)
+  isDefault   Boolean  @default(false)
+  
+  // Date range for temporary schedules
+  startDate   DateTime?
+  endDate     DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user             User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schedules        Schedule[]
+  scheduleOverrides ScheduleOverride[]
+  eventTypes       EventType[]
+
+  @@index([userId])
+}
+
+model Schedule {
+  id             String   @id @default(cuid())
+  availabilityId String
+  
+  dayOfWeek      Int      // 0-6 (Sunday-Saturday)
+  
+  // Time slots (in 24h format)
+  startTime      String   // HH:mm
+  endTime        String   // HH:mm
+  
+  // Override for specific dates
+  specificDate   DateTime?
+  
+  isActive       Boolean  @default(true)
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  availability   Availability @relation(fields: [availabilityId], references: [id], onDelete: Cascade)
+
+  @@index([availabilityId])
+  @@index([dayOfWeek])
+}
+
+model ScheduleOverride {
+  id             String   @id @default(cuid())
+  availabilityId String
+  
+  date           DateTime
+  isAvailable    Boolean  @default(true)
+  
+  // If available, specific times
+  startTime      String?  // HH:mm
+  endTime        String?  // HH:mm
+  
+  reason         String?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  availability   Availability @relation(fields: [availabilityId], references: [id], onDelete: Cascade)
+
+  @@unique([availabilityId, date])
+  @@index([availabilityId])
+  @@index([date])
+}
+
+// ============================================================================
+// BOOKINGS
+// ============================================================================
+
+model Booking {
+  id              String   @id @default(cuid())
+  
+  // Event Type
+  eventTypeId     String
+  eventType       EventType @relation(fields: [eventTypeId], references: [id])
+  
+  // Host & Guest
+  hostId          String
+  host            User     @relation("HostBookings", fields: [hostId], references: [id])
+  guestId         String?
+  guest           User?    @relation("GuestBookings", fields: [guestId], references: [id])
+  
+  // Guest Info (for non-registered users)
+  guestName       String
+  guestEmail      String
+  guestPhone      String?
+  guestNotes      String?
+  
+  // Custom field responses
+  customResponses String?  // JSON object
+  
+  // Scheduling
+  startTime       DateTime
+  endTime         DateTime
+  timezone        String   @default("UTC")
+  
+  // Status
+  status          String   @default("CONFIRMED") // PENDING, CONFIRMED, CANCELLED, RESCHEDULED, NO_SHOW
+  cancellationReason String?
+  cancelledAt     DateTime?
+  cancelledBy     String?
+  
+  // Rescheduling
+  rescheduledFrom String?
+  rescheduledTo   String?
+  
+  // Location
+  location        String?
+  videoLink       String?
+  
+  // Payment (optional)
+  paymentStatus   String   @default("NONE") // NONE, PENDING, PAID, REFUNDED
+  paymentAmount   Float?
+  paymentCurrency String?
+  paymentId       String?
+  
+  // Calendar sync
+  calendarEventId String?
+  calendarProvider String?
+  
+  // Reminders sent
+  reminderSent    Boolean  @default(false)
+  reminderSentAt  DateTime?
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  reminders       BookingReminder[]
+  auditLogs       AuditLog[]
+
+  @@index([eventTypeId])
+  @@index([hostId])
+  @@index([guestId])
+  @@index([guestEmail])
+  @@index([startTime])
+  @@index([status])
+}
+
+model BookingReminder {
+  id         String   @id @default(cuid())
+  bookingId  String
+  
+  type       String   // EMAIL, SMS
+  sentAt     DateTime
+  status     String   @default("SENT") // SENT, FAILED, BOUNCED
+  
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
+
+// ============================================================================
+// CONTACTS MODULE
+// ============================================================================
+
+model Contact {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  // Basic Info
+  firstName   String
+  lastName    String
+  email       String?
+  phone       String?
+  company     String?
+  jobTitle    String?
+  
+  // Additional Details
+  website     String?
+  linkedin    String?
+  twitter     String?
+  notes       String?
+  
+  // Custom Fields
+  customFields String? // JSON object
+  
+  // Source
+  source      String   @default("MANUAL") // MANUAL, BOOKING, IMPORT, CARDDAV, API
+  
+  // CardDAV sync
+  carddavUid  String?  // Unique ID from CardDAV server
+  carddavUrl  String?
+  carddavSyncedAt DateTime?
+  
+  // VCF Import tracking
+  vcfImportId String?
+  
+  // Tags & Groups
+  tags        String?  // JSON array of tags
+  
+  // Stats
+  totalBookings Int    @default(0)
+  lastBookingAt DateTime?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groups      ContactGroupMembership[]
+  
+  @@unique([userId, email])
+  @@index([userId])
+  @@index([email])
+  @@index([carddavUid])
+}
+
+model ContactGroup {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  name        String
+  description String?
+  color       String   @default("#6B7280")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  members     ContactGroupMembership[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model ContactGroupMembership {
+  id        String   @id @default(cuid())
+  contactId String
+  groupId   String
+  
+  createdAt DateTime @default(now())
+  
+  contact   Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  group     ContactGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, groupId])
+  @@index([contactId])
+  @@index([groupId])
+}
+
+// ============================================================================
+// CALENDAR INTEGRATIONS
+// ============================================================================
+
+model Calendar {
+  id              String   @id @default(cuid())
+  userId          String
+  
+  // Provider Info
+  provider        String   // GOOGLE, OUTLOOK, ICAL, CALDAV
+  providerAccountId String?
+  
+  // Calendar Details
+  name            String
+  calendarId      String?  // External calendar ID
+  color           String   @default("#3B82F6")
+  
+  // Sync Settings
+  syncEnabled     Boolean  @default(true)
+  syncInterval    Int      @default(15) // minutes
+  lastSyncAt      DateTime?
+  syncToken       String?  // For incremental sync
+  
+  // Booking Settings
+  checkAvailability Boolean @default(true)
+  blockOnConflict   Boolean @default(true)
+  addEventsToCalendar Boolean @default(true)
+  
+  // Credentials (encrypted)
+  accessToken      String?
+  refreshToken     String?
+  tokenExpiresAt   DateTime?
+  
+  // Status
+  isActive        Boolean  @default(true)
+  errorMessage    String?
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events          CalendarEvent[]
+
+  @@unique([userId, provider, calendarId])
+  @@index([userId])
+}
+
+model CalendarEvent {
+  id              String   @id @default(cuid())
+  calendarId      String
+  
+  // Event Details
+  externalId      String?  // ID from external provider
+  title           String
+  description     String?
+  location        String?
+  
+  // Timing
+  startTime       DateTime
+  endTime         DateTime
+  isAllDay        Boolean  @default(false)
+  timezone        String?
+  
+  // Recurrence
+  recurrenceRule  String?
+  recurrenceId    String?
+  
+  // Status
+  status          String   @default("CONFIRMED") // CONFIRMED, TENTATIVE, CANCELLED
+  visibility      String   @default("DEFAULT") // DEFAULT, PUBLIC, PRIVATE
+  
+  // Sync
+  lastSyncedAt    DateTime @default(now())
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  calendar        Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+
+  @@unique([calendarId, externalId])
+  @@index([calendarId])
+  @@index([startTime])
+}
+
+// ============================================================================
+// WORKFLOWS & AUTOMATION
+// ============================================================================
+
+model Workflow {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  // Basic Info
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  
+  // Trigger
+  triggerType String   // BOOKING_CREATED, BOOKING_CONFIRMED, BOOKING_CANCELLED, BEFORE_EVENT, AFTER_EVENT
+  triggerConfig String? // JSON config (e.g., hours before event)
+  
+  // Actions (JSON array of actions)
+  actions     String   // [{type: "EMAIL", config: {...}}, ...]
+  
+  // Associated Event Types
+  eventTypeIds String? // JSON array of event type IDs
+  
+  // Stats
+  executions  Int      @default(0)
+  lastExecutedAt DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  // Type & Content
+  type        String   // EMAIL, SMS, PUSH, IN_APP
+  title       String
+  message     String
+  data        String?  // JSON additional data
+  
+  // Status
+  status      String   @default("PENDING") // PENDING, SENT, FAILED, READ
+  sentAt      DateTime?
+  readAt      DateTime?
+  
+  // Related Entity
+  entityType  String?
+  entityId    String?
+  
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ============================================================================
+// AUDIT & SECURITY
+// ============================================================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  
+  // Action Details
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc.
+  entityType  String   // USER, EVENT_TYPE, BOOKING, CONTACT, etc.
+  entityId    String?
+  
+  // Changes (JSON)
+  oldValue    String?
+  newValue    String?
+  
+  // Request Info
+  ipAddress   String?
+  userAgent   String?
+  
+  // Security
+  isSensitive Boolean  @default(false)
+  severity    String   @default("INFO") // INFO, WARNING, ERROR, CRITICAL
+  
+  // Splunk-compatible format
+  timestamp   DateTime @default(now())
+  
+  // Relations
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  // Booking-specific audit
+  bookingId   String?
+  booking     Booking? @relation(fields: [bookingId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([timestamp])
+}
+
+// ============================================================================
+// SYSTEM CONFIGURATION
+// ============================================================================
+
+model SystemConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  isEncrypted Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+}
+
+model Migration {
+  id          String   @id @default(cuid())
+  version     String   @unique
+  name        String
+  executedAt  DateTime @default(now())
+}
+
+model Version {
+  id          String   @id @default(cuid())
+  version     String   // Semantic version (e.g., "1.0.0")
+  releaseDate DateTime @default(now())
+  changes     String   // JSON array of changes
+  isBreaking  Boolean  @default(false)
+}
