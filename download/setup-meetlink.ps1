@@ -1,6 +1,6 @@
 # MeetLink Windows Setup Automation Script
-# Version: 1.0.0
-# Description: Automates MeetLink setup on Windows
+# Version: 1.1.0
+# Description: Automates MeetLink setup on Windows with interactive credential configuration
 
 param(
     [Parameter(Position=0)]
@@ -11,11 +11,17 @@ param(
     [string]$Domain = "",
     
     [Parameter(Mandatory=$false)]
-    [string]$Email = ""
+    [string]$Email = "",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$DbUsername = "",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$DbPassword = ""
 )
 
 $ErrorActionPreference = "Stop"
-$Version = "1.0.0"
+$Version = "1.1.0"
 
 # Colors
 function Write-Success { Write-Host "✓ $args" -ForegroundColor Green }
@@ -61,6 +67,232 @@ function New-SecurePassword {
 # Generate secure secret
 function New-SecureSecret {
     return [Convert]::ToHexString([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+}
+
+# Password strength validation
+function Test-PasswordStrength {
+    param([string]$Password)
+    
+    $score = 0
+    $feedback = @()
+    
+    if ($Password.Length -ge 8) { $score++ } else { $feedback += "At least 8 characters" }
+    if ($Password.Length -ge 12) { $score++ }
+    if ($Password -cmatch '[A-Z]') { $score++ } else { $feedback += "Add uppercase letters" }
+    if ($Password -cmatch '[a-z]') { $score++ } else { $feedback += "Add lowercase letters" }
+    if ($Password -match '[0-9]') { $score++ } else { $feedback += "Add numbers" }
+    if ($Password -match '[!@#$%^&*()_+\-=\[\]{};'':"\\|,.<>\/?]') { $score++ } else { $feedback += "Add special characters" }
+    
+    $strength = switch ($score) {
+        { $_ -le 2 } { "Weak"; break }
+        { $_ -eq 3 -or $_ -eq 4 } { "Medium"; break }
+        { $_ -eq 5 } { "Strong"; break }
+        { $_ -ge 6 } { "Very Strong"; break }
+    }
+    
+    return @{
+        Score = $score
+        Strength = $strength
+        Feedback = $feedback
+        IsValid = $score -ge 4
+    }
+}
+
+# Get masked password input
+function Read-MaskedInput {
+    param([string]$Prompt = "Enter password")
+    
+    Write-Host "$Prompt" -ForegroundColor White
+    $password = ""
+    
+    while ($true) {
+        $key = [Console]::ReadKey($true)
+        
+        if ($key.Key -eq 'Enter') {
+            Write-Host ""
+            break
+        } elseif ($key.Key -eq 'Backspace') {
+            if ($password.Length -gt 0) {
+                $password = $password.Substring(0, $password.Length - 1)
+                Write-Host "`b `b" -NoNewline
+            }
+        } elseif ($key.KeyChar -ne [char]0) {
+            $password += $key.KeyChar
+            Write-Host "*" -NoNewline
+        }
+    }
+    
+    return $password
+}
+
+# Prompt for credentials
+function Get-Credentials {
+    Write-Header "Credential Configuration"
+    Write-Info "Configure your database credentials below."
+    Write-Info "These credentials will be used for PostgreSQL authentication.`n"
+    
+    # Database Username
+    Write-Host "─────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "DATABASE USERNAME" -ForegroundColor Yellow
+    Write-Host "─────────────────────────────────────────" -ForegroundColor DarkGray
+    
+    if ($DbUsername) {
+        Write-Success "Using provided username: $DbUsername"
+        $username = $DbUsername
+    } else {
+        Write-Host "Enter a username for the PostgreSQL database." -ForegroundColor Gray
+        Write-Host "Default: " -NoNewline
+        Write-Host "meetlink" -ForegroundColor Green
+        Write-Host ""
+        
+        $username = Read-Host "Username"
+        if (-not $username) { 
+            $username = "meetlink"
+            Write-Info "Using default username: meetlink"
+        }
+        
+        # Validate username
+        while ($username -match '[^a-zA-Z0-9_]') {
+            Write-Error "Username can only contain letters, numbers, and underscores."
+            $username = Read-Host "Username (or press Enter for 'meetlink')"
+            if (-not $username) { $username = "meetlink" }
+        }
+    }
+    
+    Write-Host ""
+    
+    # Database Password
+    Write-Host "─────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "DATABASE PASSWORD" -ForegroundColor Yellow
+    Write-Host "─────────────────────────────────────────" -ForegroundColor DarkGray
+    
+    if ($DbPassword) {
+        Write-Success "Using provided password"
+        $password = $DbPassword
+    } else {
+        Write-Host "Choose an option:" -ForegroundColor White
+        Write-Host "  [1] Generate a secure random password (recommended)" -ForegroundColor Cyan
+        Write-Host "  [2] Enter a custom password" -ForegroundColor Cyan
+        Write-Host ""
+        
+        $choice = Read-Host "Option (1 or 2)"
+        
+        switch ($choice) {
+            "1" {
+                Write-Host ""
+                Write-Host "Select password length:" -ForegroundColor White
+                Write-Host "  [1] 16 characters" -ForegroundColor Cyan
+                Write-Host "  [2] 20 characters (recommended)" -ForegroundColor Cyan
+                Write-Host "  [3] 24 characters" -ForegroundColor Cyan
+                Write-Host "  [4] 32 characters (maximum security)" -ForegroundColor Cyan
+                Write-Host ""
+                
+                $lengthChoice = Read-Host "Length (1-4)"
+                $length = switch ($lengthChoice) {
+                    "1" { 16 }
+                    "2" { 20 }
+                    "3" { 24 }
+                    "4" { 32 }
+                    default { 20 }
+                }
+                
+                $password = New-SecurePassword -Length $length
+                
+                Write-Host ""
+                Write-Host "Generated Password: " -NoNewline
+                Write-Host $password -ForegroundColor Green
+                Write-Host ""
+                Write-Warning "IMPORTANT: Save this password securely! It cannot be recovered."
+                
+                # Confirm saving
+                Write-Host ""
+                $confirm = Read-Host "Have you saved the password? (y/N)"
+                if ($confirm -ne 'y' -and $confirm -ne 'Y') {
+                    Write-Warning "Please save the password before continuing."
+                    Write-Host "Password: $password" -ForegroundColor Green
+                    $confirm = Read-Host "Ready to continue? (y/N)"
+                    if ($confirm -ne 'y' -and $confirm -ne 'Y') {
+                        Write-Error "Deployment cancelled. Please run the script again when ready."
+                        exit 1
+                    }
+                }
+            }
+            
+            "2" {
+                Write-Host ""
+                Write-Info "Enter a custom password for the database."
+                Write-Info "Password requirements:"
+                Write-Host "  - At least 8 characters" -ForegroundColor Gray
+                Write-Host "  - Mix of uppercase and lowercase letters" -ForegroundColor Gray
+                Write-Host "  - At least one number" -ForegroundColor Gray
+                Write-Host "  - At least one special character (!@#$%^&*...)" -ForegroundColor Gray
+                Write-Host ""
+                
+                do {
+                    $password = Read-MaskedInput -Prompt "Enter password"
+                    
+                    if ($password.Length -lt 8) {
+                        Write-Error "Password must be at least 8 characters."
+                        continue
+                    }
+                    
+                    $result = Test-PasswordStrength -Password $password
+                    
+                    Write-Host ""
+                    Write-Host "Password Strength: " -NoNewline
+                    switch ($result.Strength) {
+                        "Weak" { Write-Host $result.Strength -ForegroundColor Red }
+                        "Medium" { Write-Host $result.Strength -ForegroundColor Yellow }
+                        "Strong" { Write-Host $result.Strength -ForegroundColor Green }
+                        "Very Strong" { Write-Host $result.Strength -ForegroundColor Green }
+                    }
+                    
+                    if (-not $result.IsValid) {
+                        Write-Warning "Password is not strong enough. Suggestions:"
+                        foreach ($item in $result.Feedback) {
+                            Write-Host "  - $item" -ForegroundColor Yellow
+                        }
+                        Write-Host ""
+                        $continue = Read-Host "Use this password anyway? (y/N)"
+                        if ($continue -eq 'y' -or $continue -eq 'Y') {
+                            break
+                        }
+                        continue
+                    }
+                    
+                    break
+                } while ($true)
+                
+                # Confirm password
+                Write-Host ""
+                $confirmPassword = Read-MaskedInput -Prompt "Confirm password"
+                
+                if ($password -ne $confirmPassword) {
+                    Write-Error "Passwords do not match. Please try again."
+                    return Get-Credentials  # Recursive call
+                }
+                
+                Write-Success "Password confirmed!"
+            }
+            
+            default {
+                Write-Warning "Invalid option. Generating a secure password..."
+                $password = New-SecurePassword -Length 20
+                Write-Host "Generated Password: $password" -ForegroundColor Green
+            }
+        }
+    }
+    
+    Write-Host ""
+    Write-Host "─────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Success "Credentials configured successfully!"
+    Write-Host "─────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host ""
+    
+    return @{
+        Username = $username
+        Password = $password
+    }
 }
 
 # Check prerequisites
@@ -158,20 +390,35 @@ function New-EnvironmentFile {
     
     $envFile = ".env.production"
     
-    # Generate secrets
-    $postgresPassword = New-SecurePassword -Length 20
+    # Get credentials first
+    $credentials = Get-Credentials
+    
+    # Generate application secrets
     $nextauthSecret = New-SecureSecret
     $jwtSecret = New-SecureSecret
     $encryptionKey = New-SecureSecret
     
-    # Get user input
+    # Get domain and email
+    Write-Host ""
+    Write-Host "─────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "APPLICATION SETTINGS" -ForegroundColor Yellow
+    Write-Host "─────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host ""
+    
     if (-not $Domain) {
-        $Domain = Read-Host "Enter domain (e.g., meetlink.yourdomain.com)"
+        Write-Host "Enter your domain (e.g., meetlink.yourdomain.com)" -ForegroundColor Gray
+        Write-Host "For local testing, use: localhost:3000" -ForegroundColor Gray
+        Write-Host ""
+        $Domain = Read-Host "Domain"
         if (-not $Domain) { $Domain = "localhost:3000" }
     }
     
+    Write-Host ""
+    
     if (-not $Email) {
-        $Email = Read-Host "Enter your email (for admin)"
+        Write-Host "Enter admin email for notifications" -ForegroundColor Gray
+        Write-Host ""
+        $Email = Read-Host "Admin Email"
         if (-not $Email) { $Email = "admin@example.com" }
     }
     
@@ -181,6 +428,9 @@ function New-EnvironmentFile {
         $protocol = "https"
     }
     
+    # Database name
+    $dbName = "meetlink"
+    
     $envContent = @"
 # MeetLink Environment Configuration
 # Generated on $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
@@ -189,9 +439,9 @@ function New-EnvironmentFile {
 # ============================================
 # PostgreSQL Database
 # ============================================
-POSTGRES_USER=meetlink
-POSTGRES_PASSWORD=$postgresPassword
-POSTGRES_DB=meetlink
+POSTGRES_USER=$($credentials.Username)
+POSTGRES_PASSWORD=$($credentials.Password)
+POSTGRES_DB=$dbName
 POSTGRES_PORT=5432
 
 # ============================================
@@ -212,7 +462,7 @@ ENCRYPTION_KEY=$encryptionKey
 # ============================================
 # Database URL (internal Docker network)
 # ============================================
-DATABASE_URL=postgresql://meetlink:${postgresPassword}@postgres:5432/meetlink
+DATABASE_URL=postgresql://$($credentials.Username):$($credentials.Password)@postgres:5432/$dbName
 
 # ============================================
 # Email Configuration (Optional)
@@ -249,15 +499,18 @@ AUDIT_LOG_ENABLED=true
     
     $envContent | Out-File -FilePath $envFile -Encoding UTF8 -Force
     
-    Write-Success "Created $envFile"
-    Write-Warning "Store these credentials securely!"
-    
     Write-Host ""
-    Write-Host "Generated Credentials:" -ForegroundColor Yellow
-    Write-Host "  Database Password: " -NoNewline
-    Write-Host $postgresPassword -ForegroundColor Green
-    Write-Host "  NextAuth Secret:   " -NoNewline
-    Write-Host $nextauthSecret -ForegroundColor Green
+    Write-Host "─────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Success "Environment file created: $envFile"
+    Write-Host "─────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host ""
+    
+    Write-Warning "SECURITY NOTICE:"
+    Write-Host "  - Keep .env.production secure and never commit it to version control" -ForegroundColor Gray
+    Write-Host "  - Store your credentials in a password manager" -ForegroundColor Gray
+    Write-Host "  - Database username: " -NoNewline
+    Write-Host $credentials.Username -ForegroundColor Cyan
+    Write-Host "  - Database password: [HIDDEN]" -ForegroundColor Gray
 }
 
 # Deploy with Docker
@@ -316,12 +569,17 @@ function Invoke-DatabaseMigrations {
 function Show-Summary {
     $envFile = ".env.production"
     $domain = "localhost:3000"
+    $username = "meetlink"
     
     if (Test-Path $envFile) {
         $content = Get-Content $envFile
         $urlLine = $content | Where-Object { $_ -match "NEXT_PUBLIC_APP_URL=" }
         if ($urlLine) {
             $domain = $urlLine.Split('=')[1]
+        }
+        $userLine = $content | Where-Object { $_ -match "POSTGRES_USER=" }
+        if ($userLine) {
+            $username = $userLine.Split('=')[1]
         }
     }
     
@@ -330,6 +588,7 @@ function Show-Summary {
     Write-Host "MeetLink has been deployed successfully!" -ForegroundColor Green
     Write-Host ""
     Write-Host "  Access URL:        $domain" -ForegroundColor Cyan
+    Write-Host "  Database User:     $username" -ForegroundColor Cyan
     Write-Host "  Repository:        https://github.com/141stfighterwing-collab/meetlink" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Useful Commands:" -ForegroundColor Yellow
@@ -380,7 +639,7 @@ function Invoke-QuickUpdate {
 # Show help
 function Show-Help {
     Show-Banner
-    Write-Host "Usage: .\setup-meetlink.ps1 [command]"
+    Write-Host "Usage: .\setup-meetlink.ps1 [command] [options]"
     Write-Host ""
     Write-Host "Commands:"
     Write-Host "  deploy      Full deployment (clone, configure, deploy)"
@@ -393,10 +652,16 @@ function Show-Help {
     Write-Host "  status      Show service status"
     Write-Host "  help        Show this help message"
     Write-Host ""
+    Write-Host "Options:"
+    Write-Host "  -Domain        Set the application domain"
+    Write-Host "  -Email         Set the admin email"
+    Write-Host "  -DbUsername    Set the database username"
+    Write-Host "  -DbPassword    Set the database password"
+    Write-Host ""
     Write-Host "Examples:"
     Write-Host "  .\setup-meetlink.ps1 deploy"
-    Write-Host "  .\setup-meetlink.ps1 update"
     Write-Host "  .\setup-meetlink.ps1 -Domain 'meetlink.company.com' deploy"
+    Write-Host "  .\setup-meetlink.ps1 -DbUsername 'admin' -DbPassword 'secret' deploy"
 }
 
 # Main execution
