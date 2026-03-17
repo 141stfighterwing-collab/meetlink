@@ -407,10 +407,10 @@ get_credentials() {
     echo "─────────────────────────────────────────"
     echo ""
     echo "Enter your domain (e.g., meetlink.yourdomain.com)"
-    echo "For local testing, use: localhost:3000"
+    echo "For local testing, use: localhost:3132"
     echo ""
     read -p "Domain: " DOMAIN
-    DOMAIN="${DOMAIN:-localhost:3000}"
+    DOMAIN="${DOMAIN:-localhost:3132}"
     
     # Admin email
     echo ""
@@ -714,7 +714,7 @@ wait_for_services() {
     log "INFO" "Waiting for application to be ready..."
     waited=0
     while [ $waited -lt 180 ]; do
-        if curl -s -o /dev/null -w "%{http_code}" "http://localhost:3000/api/health" 2>/dev/null | grep -q "200"; then
+        if curl -s -o /dev/null -w "%{http_code}" "http://localhost:3132/api/health" 2>/dev/null | grep -q "200"; then
             log "SUCCESS" "Application is healthy"
             break
         fi
@@ -774,7 +774,7 @@ verify_deployment() {
     
     # Test application
     log "INFO" "Testing application endpoint..."
-    if curl -s -o /dev/null -w "%{http_code}" "http://localhost:3000" 2>/dev/null | grep -q "200"; then
+    if curl -s -o /dev/null -w "%{http_code}" "http://localhost:3132" 2>/dev/null | grep -q "200"; then
         log "SUCCESS" "Application is accessible"
     else
         log "WARNING" "Application may still be starting..."
@@ -808,7 +808,7 @@ show_summary() {
     echo ""
     
     echo -e "${YELLOW}Services:${NC}"
-    echo "  Application:  http://localhost:3000"
+    echo "  Application:  http://localhost:3132"
     echo "  PostgreSQL:   localhost:5432"
     echo "  Redis:        localhost:6379"
     echo ""
@@ -835,7 +835,7 @@ show_summary() {
     fi
     
     echo -e "${YELLOW}Next Steps:${NC}"
-    echo "  1. Access the application at http://localhost:3000"
+    echo "  1. Access the application at http://localhost:3132"
     echo "  2. Create your admin account"
     echo "  3. Configure calendar integrations in Settings"
     echo "  4. Set up your event types"

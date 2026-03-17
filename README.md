@@ -90,6 +90,55 @@ MeetLink is a fully-featured, self-hosted scheduling application that replicates
 
 ---
 
+## Screenshots
+
+### Dashboard
+
+![Dashboard](public/screenshots/dashboard.png)
+*Main dashboard with statistics and quick actions*
+
+### Event Types
+
+![Event Types](public/screenshots/event-types.png)
+*Manage your meeting types with custom durations and settings*
+
+### Calendar View
+
+![Calendar](public/screenshots/calendar.png)
+*Booking calendar with multiple view options*
+
+### Contacts
+
+![Contacts](public/screenshots/contacts.png)
+*Contact management with groups and search*
+
+### Availability
+
+![Availability](public/screenshots/availability.png)
+*Configure your availability schedules*
+
+### Settings & Theme Switcher
+
+![Theme Switcher](public/screenshots/theme-switcher.png)
+*Switch between 6 beautiful themes*
+
+### Dark Theme
+
+![Dark Theme](public/screenshots/dashboard-dark.png)
+*Dark mode for reduced eye strain*
+
+### Sunset Theme
+
+![Sunset Theme](public/screenshots/theme-sunset.png)
+*Warm and vibrant orange-pink theme*
+
+### Mobile Responsive
+
+![Mobile View](public/screenshots/mobile-view.png)
+*Fully responsive design for all devices*
+
+---
+
 ## Quick Start (1-Click Deploy)
 
 ### Prerequisites
@@ -163,7 +212,7 @@ docker-compose logs -f
 
 #### Step 4: Access Application
 
-- **Application**: http://localhost:3000
+- **Application**: http://localhost:3132
 - **PostgreSQL**: localhost:5432
 - **Redis**: localhost:6379
 
@@ -422,7 +471,7 @@ All deployment activities are logged with timestamps and progress percentages:
 [2025-01-15 10:30:48] [PROGRESS] 10% - Creating installation directory...
 ...
 [2025-01-15 10:35:22] [PROGRESS] 95% - Verifying deployment...
-[2025-01-15 10:35:25] [SUCCESS] MeetLink is running at http://localhost:3000
+[2025-01-15 10:35:25] [SUCCESS] MeetLink is running at http://localhost:3132
 [2025-01-15 10:35:25] [PROGRESS] 100% - Deployment complete!
 ```
 
@@ -501,7 +550,7 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "3000:3132"
     environment:
       - DATABASE_URL=postgresql://meetlink:${DB_PASSWORD}@postgres:5432/meetlink
     depends_on:
@@ -721,7 +770,7 @@ Error: Migration failed
 
 ```bash
 # Application health
-curl http://localhost:3000/api/health
+curl http://localhost:3132/api/health
 
 # Database health
 docker-compose exec postgres pg_isready
@@ -815,7 +864,7 @@ Or in `docker-compose.yml`:
 services:
   app:
     ports:
-      - "8080:3000"  # Maps host port 8080 to container port 3000
+      - "8080:3132"  # Maps host port 8080 to container port 3132
 ```
 
 ### Database Questions
@@ -892,10 +941,10 @@ find $BACKUP_DIR -name "*.sql.gz" -mtime +30 -delete
 3. **Check port conflicts**:
    ```bash
    # Windows
-   netstat -ano | findstr :3000
+   netstat -ano | findstr :3132
    
    # Linux/macOS
-   lsof -i :3000
+   lsof -i :3132
    ```
 
 4. **Reset containers**:
@@ -927,7 +976,7 @@ server {
     server_name meetlink.yourdomain.com;
     
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:3132;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -1008,15 +1057,15 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 powershell -ExecutionPolicy Bypass -File .\deploy-meetlink.ps1
 ```
 
-#### Port 3000 is already in use
+#### Port 3132 is already in use
 
 ```bash
-# Find what's using port 3000
+# Find what's using port 3132
 # Windows
-netstat -ano | findstr :3000
+netstat -ano | findstr :3132
 
 # Linux/macOS
-lsof -i :3000
+lsof -i :3132
 
 # Kill the process or change MeetLink's port in .env
 APP_PORT=3001

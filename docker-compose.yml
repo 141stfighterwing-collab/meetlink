@@ -50,12 +50,12 @@ services:
       
       # Application
       NODE_ENV: production
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3132}
       NEXT_PUBLIC_APP_NAME: MeetLink
       
       # Authentication
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change_this_to_a_secure_secret}
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3132}
       
       # OAuth Providers (Optional)
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
@@ -90,7 +90,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       AUDIT_LOG_ENABLED: ${AUDIT_LOG_ENABLED:-true}
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "${APP_PORT:-3132}:3000"
     networks:
       - meetlink-network
     logging:

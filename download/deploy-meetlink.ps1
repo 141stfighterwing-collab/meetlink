@@ -743,11 +743,11 @@ function New-EnvironmentConfiguration {
         if (-not $Silent) {
             Write-Host ""
             Write-Host "Enter your domain (e.g., meetlink.yourdomain.com)" -ForegroundColor Gray
-            Write-Host "For local testing, use: localhost:3000" -ForegroundColor Gray
+            Write-Host "For local testing, use: localhost:3132" -ForegroundColor Gray
             Write-Host ""
             $Domain = Read-Host "Domain"
         }
-        if (-not $Domain) { $Domain = "localhost:3000" }
+        if (-not $Domain) { $Domain = "localhost:3132" }
     }
     
     # Get admin email
@@ -1026,7 +1026,7 @@ function Wait-ForServices {
     $waited = 0
     while ($waited -lt 180) {
         try {
-            $response = Invoke-WebRequest -Uri "http://localhost:3000/api/health" -TimeoutSec 5 -ErrorAction SilentlyContinue
+            $response = Invoke-WebRequest -Uri "http://localhost:3132/api/health" -TimeoutSec 5 -ErrorAction SilentlyContinue
             if ($response.StatusCode -eq 200) {
                 Write-Log -Level SUCCESS -Message "Application is healthy"
                 break
@@ -1099,7 +1099,7 @@ function Test-Deployment {
     Write-Log -Level INFO -Message "Testing application endpoints..."
     
     try {
-        $response = Invoke-WebRequest -Uri "http://localhost:3000" -TimeoutSec 10
+        $response = Invoke-WebRequest -Uri "http://localhost:3132" -TimeoutSec 10
         if ($response.StatusCode -eq 200) {
             Write-Log -Level SUCCESS -Message "Application is accessible"
         }
@@ -1139,7 +1139,7 @@ function Show-DeploymentSummary {
     Write-Host ""
     
     Write-Host "Services:" -ForegroundColor Yellow
-    Write-Host "  Application:  http://localhost:3000" -ForegroundColor White
+    Write-Host "  Application:  http://localhost:3132" -ForegroundColor White
     Write-Host "  PostgreSQL:   localhost:5432" -ForegroundColor White
     Write-Host "  Redis:        localhost:6379" -ForegroundColor White
     Write-Host ""
@@ -1166,7 +1166,7 @@ function Show-DeploymentSummary {
     }
     
     Write-Host "Next Steps:" -ForegroundColor Yellow
-    Write-Host "  1. Access the application at http://localhost:3000" -ForegroundColor White
+    Write-Host "  1. Access the application at http://localhost:3132" -ForegroundColor White
     Write-Host "  2. Create your admin account" -ForegroundColor White
     Write-Host "  3. Configure calendar integrations in Settings" -ForegroundColor White
     Write-Host "  4. Set up your event types" -ForegroundColor White
