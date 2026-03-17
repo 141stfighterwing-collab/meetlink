@@ -27,6 +27,7 @@
 - [Versioning & Updates](#versioning--updates)
 - [API Documentation](#api-documentation)
 - [Troubleshooting](#troubleshooting)
+- [Frequently Asked Questions (FAQ)](#frequently-asked-questions-faq)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -743,6 +744,373 @@ docker-compose exec redis redis-cli ping
 1. **Documentation**: Check this README and `/docs` folder
 2. **Issues**: [GitHub Issues](https://github.com/141stfighterwing-collab/meetlink/issues)
 3. **Discussions**: [GitHub Discussions](https://github.com/141stfighterwing-collab/meetlink/discussions)
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### General Questions
+
+#### What is MeetLink?
+
+MeetLink is a self-hosted scheduling platform similar to Calendly. It allows users to create booking pages, manage appointments, and integrate with various calendar services. Unlike Calendly, MeetLink gives you complete control over your data as it runs on your own infrastructure.
+
+#### Is MeetLink free?
+
+Yes! MeetLink is open-source and free to use under the MIT license. You only pay for your own hosting infrastructure (server, database, etc.).
+
+#### How does MeetLink compare to Calendly?
+
+| Feature | MeetLink | Calendly |
+|---------|----------|----------|
+| Self-hosted | ✅ Yes | ❌ No |
+| Data ownership | ✅ Full control | ❌ Stored on Calendly servers |
+| Custom branding | ✅ Full customization | 💰 Paid plans only |
+| API access | ✅ Free | 💰 Paid plans only |
+| Unlimited events | ✅ Yes | 💰 Paid plans only |
+| Cost | Free (hosting only) | $8-$16/user/month |
+
+### Installation & Setup
+
+#### What are the minimum system requirements?
+
+- **CPU**: 2 cores minimum, 4+ recommended
+- **RAM**: 4GB minimum, 8GB+ recommended
+- **Storage**: 10GB minimum, 50GB+ for production
+- **Software**: Docker & Docker Compose, or Node.js 20+
+
+#### Can I run MeetLink without Docker?
+
+Yes, you can run MeetLink manually with:
+- Node.js 20+
+- PostgreSQL 15+
+- Redis 7+ (optional)
+
+See [Manual Installation](#manual-installation) for details.
+
+#### Does the PowerShell script work on Windows 7?
+
+No, the PowerShell script requires PowerShell 5.1+ which comes with Windows 10/11 and Windows Server 2016+. For older systems, use the manual installation method.
+
+#### Why does the script require Administrator privileges?
+
+Administrator privileges are needed to:
+- Create installation directories in protected paths
+- Configure Windows Firewall rules
+- Install Docker if not present
+
+You can run without admin rights by specifying a user-writable `-InstallPath`.
+
+#### How do I run MeetLink on a different port?
+
+Modify your `.env` file:
+
+```env
+APP_PORT=8080
+```
+
+Or in `docker-compose.yml`:
+
+```yaml
+services:
+  app:
+    ports:
+      - "8080:3000"  # Maps host port 8080 to container port 3000
+```
+
+### Database Questions
+
+#### Which database does MeetLink support?
+
+MeetLink is designed for **PostgreSQL 15+**. Other databases (MySQL, SQLite) are not officially supported.
+
+#### Should I use a cloud database or self-hosted?
+
+| Scenario | Recommendation |
+|----------|----------------|
+| Development/Testing | Local PostgreSQL in Docker |
+| Small Team (< 10 users) | Supabase or Neon (free tiers) |
+| Medium Team (10-50) | AWS RDS or Azure PostgreSQL |
+| Enterprise (50+ users) | Self-hosted PostgreSQL or AWS RDS Multi-AZ |
+| Compliance requirements | Self-hosted PostgreSQL |
+
+#### How do I migrate from one database to another?
+
+1. **Export data**:
+   ```bash
+   pg_dump -U meetlink -d meetlink > backup.sql
+   ```
+
+2. **Update DATABASE_URL** in `.env`
+
+3. **Run migrations**:
+   ```bash
+   npx prisma migrate deploy
+   ```
+
+4. **Import data**:
+   ```bash
+   psql -U meetlink -d meetlink < backup.sql
+   ```
+
+#### How do I backup my database?
+
+**Manual backup**:
+```bash
+# PostgreSQL
+pg_dump -U meetlink -d meetlink > backup-$(date +%Y%m%d).sql
+
+# Docker volume backup
+docker run --rm -v meetlink_postgres_data:/data -v $(pwd):/backup alpine tar czf /backup/postgres-backup.tar.gz /data
+```
+
+**Automated backup script**:
+```bash
+#!/bin/bash
+# Add to cron: 0 2 * * * /path/to/backup.sh
+BACKUP_DIR="/backups/meetlink"
+mkdir -p $BACKUP_DIR
+pg_dump -U meetlink -d meetlink | gzip > $BACKUP_DIR/meetlink-$(date +%Y%m%d-%H%M%S).sql.gz
+# Keep only last 30 days
+find $BACKUP_DIR -name "*.sql.gz" -mtime +30 -delete
+```
+
+### Docker & Deployment
+
+#### Docker containers won't start. What should I do?
+
+1. **Check logs**:
+   ```bash
+   docker-compose logs -f
+   ```
+
+2. **Verify environment**:
+   ```bash
+   cat .env  # Ensure all required variables are set
+   ```
+
+3. **Check port conflicts**:
+   ```bash
+   # Windows
+   netstat -ano | findstr :3000
+   
+   # Linux/macOS
+   lsof -i :3000
+   ```
+
+4. **Reset containers**:
+   ```bash
+   docker-compose down -v  # Removes volumes too
+   docker-compose up -d --build
+   ```
+
+#### How do I update MeetLink to the latest version?
+
+```bash
+cd meetlink
+git pull origin main
+docker-compose down
+docker-compose up -d --build
+npx prisma migrate deploy
+```
+
+See [Versioning & Updates](#versioning--updates) for detailed instructions.
+
+#### Can I run MeetLink behind a reverse proxy?
+
+Yes! MeetLink works well behind Nginx, Traefik, or Caddy:
+
+**Nginx example**:
+```nginx
+server {
+    listen 80;
+    server_name meetlink.yourdomain.com;
+    
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+#### How do I enable HTTPS?
+
+**Using Let's Encrypt with Certbot**:
+```bash
+# Install certbot
+sudo apt install certbot python3-certbot-nginx
+
+# Get certificate
+sudo certbot --nginx -d meetlink.yourdomain.com
+
+# Auto-renewal
+sudo systemctl enable certbot.timer
+```
+
+**Using Docker with Caddy**:
+```yaml
+# docker-compose.yml addition
+caddy:
+  image: caddy:2
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - ./Caddyfile:/etc/caddy/Caddyfile
+    - caddy_data:/data
+```
+
+### Troubleshooting
+
+#### "Permission denied" errors during installation
+
+```bash
+# Linux/macOS
+sudo chown -R $USER:$USER /opt/meetlink
+chmod -R 755 /opt/meetlink
+
+# Windows (run as Administrator)
+icacls "C:\MeetLink" /grant Users:F /T
+```
+
+#### Database migration errors
+
+```bash
+# Reset database (WARNING: deletes all data)
+npx prisma migrate reset
+
+# Or manually fix:
+npx prisma migrate resolve --applied <migration_name>
+npx prisma migrate deploy
+```
+
+#### Application shows blank page
+
+1. Check browser console for JavaScript errors
+2. Verify `NEXT_PUBLIC_APP_URL` matches your actual URL
+3. Clear browser cache and rebuild:
+   ```bash
+   rm -rf .next
+   npm run build
+   ```
+
+#### PowerShell script says "execution restricted"
+
+```powershell
+# Temporarily allow script execution
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+# Or run with bypass
+powershell -ExecutionPolicy Bypass -File .\deploy-meetlink.ps1
+```
+
+#### Port 3000 is already in use
+
+```bash
+# Find what's using port 3000
+# Windows
+netstat -ano | findstr :3000
+
+# Linux/macOS
+lsof -i :3000
+
+# Kill the process or change MeetLink's port in .env
+APP_PORT=3001
+```
+
+### Feature Questions
+
+#### Can I customize the booking page?
+
+Yes! MeetLink supports:
+- Custom themes (6 built-in themes)
+- Custom colors via CSS variables
+- Custom branding (logo, company name)
+- Custom email templates
+
+#### Does MeetLink support team scheduling?
+
+Yes, MeetLink supports:
+- Multiple users with individual calendars
+- Team event types (round-robin coming soon)
+- Shared availability
+- Team member management
+
+#### How do I integrate with Google Calendar?
+
+1. Create a Google Cloud project
+2. Enable Google Calendar API
+3. Configure OAuth credentials
+4. Add to `.env`:
+   ```env
+   GOOGLE_CLIENT_ID=your_client_id
+   GOOGLE_CLIENT_SECRET=your_client_secret
+   ```
+5. Restart MeetLink
+
+#### Is there a mobile app?
+
+MeetLink is a Progressive Web App (PWA) that works on mobile browsers. You can add it to your home screen for an app-like experience. Native mobile apps are on the roadmap.
+
+### Security Questions
+
+#### Is MeetLink secure?
+
+MeetLink includes several security features:
+- Row-Level Security (RLS) for multi-tenant isolation
+- Audit logging (Splunk-compatible)
+- Encrypted sessions and tokens
+- HTTPS enforcement
+- Rate limiting
+- Input validation and sanitization
+
+#### How do I enable two-factor authentication?
+
+1. Go to Settings → Security
+2. Click "Enable 2FA"
+3. Scan QR code with your authenticator app
+4. Enter verification code
+
+#### Where are passwords stored?
+
+Passwords are hashed using bcrypt and stored in the PostgreSQL database. They are never stored in plain text or logs.
+
+#### How do I rotate API keys?
+
+1. Go to Settings → Security → API Keys
+2. Click "Generate New API Key"
+3. Update your integrations with the new key
+4. Revoke the old key after verification
+
+### Support
+
+#### Where can I get help?
+
+1. **Documentation**: This README and `/docs` folder
+2. **FAQ**: This section
+3. **GitHub Issues**: [Report bugs](https://github.com/141stfighterwing-collab/meetlink/issues)
+4. **Discussions**: [Ask questions](https://github.com/141stfighterwing-collab/meetlink/discussions)
+
+#### How do I report a bug?
+
+1. Check existing issues first
+2. Create a new issue with:
+   - Steps to reproduce
+   - Expected behavior
+   - Actual behavior
+   - Environment details (OS, Node.js version, etc.)
+   - Logs (redact sensitive info)
+
+#### Can I request a feature?
+
+Yes! Open a GitHub issue with the "enhancement" label and describe:
+- The feature you want
+- Why it would be useful
+- Any implementation ideas
 
 ---
 

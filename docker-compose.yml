@@ -1,0 +1,144 @@
+# MeetLink - Self-Hosted Scheduling Platform
+# Docker Compose Configuration for Production Deployment
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: meetlink-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-meetlink}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-meetlink_secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-meetlink}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-meetlink} -d ${POSTGRES_DB:-meetlink}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - meetlink-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MeetLink Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+    container_name: meetlink-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-meetlink}:${POSTGRES_PASSWORD:-meetlink_secure_password}@postgres:5432/${POSTGRES_DB:-meetlink}
+      
+      # Application
+      NODE_ENV: production
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      NEXT_PUBLIC_APP_NAME: MeetLink
+      
+      # Authentication
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change_this_to_a_secure_secret}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      
+      # OAuth Providers (Optional)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      AZURE_AD_CLIENT_ID: ${AZURE_AD_CLIENT_ID:-}
+      AZURE_AD_CLIENT_SECRET: ${AZURE_AD_CLIENT_SECRET:-}
+      AZURE_AD_TENANT_ID: ${AZURE_AD_TENANT_ID:-}
+      
+      # Email Configuration
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-noreply@meetlink.local}
+      
+      # SMS Configuration (Optional)
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
+      
+      # Video Conferencing (Optional)
+      ZOOM_CLIENT_ID: ${ZOOM_CLIENT_ID:-}
+      ZOOM_CLIENT_SECRET: ${ZOOM_CLIENT_SECRET:-}
+      TEAMS_CLIENT_ID: ${TEAMS_CLIENT_ID:-}
+      TEAMS_CLIENT_SECRET: ${TEAMS_CLIENT_SECRET:-}
+      
+      # Security
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-change_this_to_32_char_encryption_key}
+      JWT_SECRET: ${JWT_SECRET:-change_this_to_jwt_secret}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      AUDIT_LOG_ENABLED: ${AUDIT_LOG_ENABLED:-true}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    networks:
+      - meetlink-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis for caching and sessions (Optional)
+  redis:
+    image: redis:7-alpine
+    container_name: meetlink-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_secure_password}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - meetlink-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_secure_password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nginx Reverse Proxy (Optional - for production)
+  nginx:
+    image: nginx:alpine
+    container_name: meetlink-nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "${NGINX_HTTP_PORT:-8080}:80"
+      - "${NGINX_HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - meetlink-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  meetlink-network:
+    driver: bridge
