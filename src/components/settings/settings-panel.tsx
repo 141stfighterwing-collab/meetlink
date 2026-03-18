@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ThemeSwitcher } from '@/components/theme/theme-switcher';
+import { EnvVariablesConfig } from './env-variables-config';
 import {
   Globe,
   Shield,
@@ -28,6 +29,7 @@ import {
   Save,
   Mail,
   Phone,
+  Settings2,
 } from 'lucide-react';
 
 export function SettingsPanel() {
@@ -53,6 +55,7 @@ export function SettingsPanel() {
     smsCancellation: true,
     pushNewBooking: true,
     pushCancellation: true,
+    smsBookingConfirmation: false,
   });
 
   const [security, setSecurity] = useState({
@@ -71,12 +74,13 @@ export function SettingsPanel() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4 md:space-y-6">
-        <TabsList className="grid grid-cols-4 w-full h-9 md:h-10">
-          <TabsTrigger value="profile" className="text-xs md:text-sm px-1 md:px-4">Profile</TabsTrigger>
-          <TabsTrigger value="notifications" className="text-xs md:text-sm px-1 md:px-4 hidden sm:inline-flex">Alerts</TabsTrigger>
-          <TabsTrigger value="notifications" className="text-xs md:text-sm px-1 md:px-4 sm:hidden">Alerts</TabsTrigger>
-          <TabsTrigger value="appearance" className="text-xs md:text-sm px-1 md:px-4">Theme</TabsTrigger>
-          <TabsTrigger value="security" className="text-xs md:text-sm px-1 md:px-4">Security</TabsTrigger>
+        <TabsList className="grid grid-cols-5 w-full h-9 md:h-10">
+          <TabsTrigger value="profile" className="text-xs md:text-sm px-1 md:px-3">Profile</TabsTrigger>
+          <TabsTrigger value="notifications" className="text-xs md:text-sm px-1 md:px-3 hidden sm:inline-flex">Alerts</TabsTrigger>
+          <TabsTrigger value="notifications" className="text-xs md:text-sm px-1 md:px-3 sm:hidden">Alerts</TabsTrigger>
+          <TabsTrigger value="appearance" className="text-xs md:text-sm px-1 md:px-3">Theme</TabsTrigger>
+          <TabsTrigger value="security" className="text-xs md:text-sm px-1 md:px-3">Security</TabsTrigger>
+          <TabsTrigger value="config" className="text-xs md:text-sm px-1 md:px-3">Config</TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}
@@ -600,6 +604,26 @@ export function SettingsPanel() {
                   </div>
                   <Button variant="destructive" className="h-8 md:h-9 text-xs md:text-sm flex-shrink-0">Delete Account</Button>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Config Tab - Environment Variables */}
+        <TabsContent value="config">
+          <div className="space-y-4 md:space-y-6">
+            <Card className="border-blue-200 dark:border-blue-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm md:text-base flex items-center">
+                  <Settings2 className="h-4 w-4 md:h-5 md:w-5 mr-2 text-blue-500" />
+                  Environment Variables
+                </CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Configure application settings, database connections, integrations, and security options
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <EnvVariablesConfig />
               </CardContent>
             </Card>
           </div>
