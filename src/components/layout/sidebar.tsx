@@ -15,7 +15,6 @@ import {
   ChevronRight,
   Video,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import type { ViewMode } from '@/types';
 
 const navigationItems: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
@@ -35,8 +34,8 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'flex flex-col h-screen bg-slate-900 text-white transition-all duration-300',
-        sidebarOpen ? 'w-64' : 'w-16'
+        'hidden lg:flex flex-col h-screen bg-slate-900 text-white transition-all duration-300',
+        sidebarOpen ? 'lg:w-64' : 'lg:w-16'
       )}
     >
       {/* Logo */}

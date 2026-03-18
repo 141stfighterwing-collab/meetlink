@@ -13,23 +13,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Clock,
   Users,
   Video,
@@ -226,39 +209,39 @@ export function EventList() {
   const getLocationIcon = (type: string) => {
     switch (type) {
       case 'VIDEO':
-        return <Video className="h-4 w-4" />;
+        return <Video className="h-3.5 w-3.5 md:h-4 md:w-4" />;
       case 'PHONE':
-        return <Phone className="h-4 w-4" />;
+        return <Phone className="h-3.5 w-3.5 md:h-4 md:w-4" />;
       case 'IN_PERSON':
-        return <MapPin className="h-4 w-4" />;
+        return <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4" />;
       default:
-        return <Video className="h-4 w-4" />;
+        return <Video className="h-3.5 w-3.5 md:h-4 md:w-4" />;
     }
   };
 
   const getTypeBadge = (type: string) => {
     const badges: Record<string, { label: string; className: string }> = {
-      ONE_ON_ONE: { label: 'One-on-One', className: 'bg-emerald-100 text-emerald-700' },
-      GROUP: { label: 'Group', className: 'bg-blue-100 text-blue-700' },
-      ROUND_ROBIN: { label: 'Round Robin', className: 'bg-purple-100 text-purple-700' },
-      COLLECTIVE: { label: 'Collective', className: 'bg-orange-100 text-orange-700' },
+      ONE_ON_ONE: { label: 'One-on-One', className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
+      GROUP: { label: 'Group', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+      ROUND_ROBIN: { label: 'Round Robin', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
+      COLLECTIVE: { label: 'Collective', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
     };
     const badge = badges[type] || badges.ONE_ON_ONE;
-    return <Badge className={badge.className}>{badge.label}</Badge>;
+    return <Badge className={`${badge.className} text-[10px] md:text-xs`}>{badge.label}</Badge>;
   };
 
   return (
-    <div className="p-6">
+    <div className="space-y-4 md:space-y-6 max-w-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-slate-800">Event Types</h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <h2 className="text-lg md:text-xl font-semibold text-slate-800 dark:text-white">Event Types</h2>
+          <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Create and manage your meeting types for scheduling
           </p>
         </div>
         <Button
-          className="bg-emerald-600 hover:bg-emerald-700"
+          className="bg-emerald-600 hover:bg-emerald-700 h-9 md:h-10 w-full sm:w-auto"
           onClick={() => {
             setEditingEvent(null);
             setShowEventTypeModal(true);
@@ -270,7 +253,7 @@ export function EventList() {
       </div>
 
       {/* Event Types Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         {eventTypes.map((event) => (
           <Card key={event.id} className="relative overflow-hidden">
             {/* Color Indicator */}
@@ -279,38 +262,39 @@ export function EventList() {
               style={{ backgroundColor: event.color }}
             />
 
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-2">
+            <CardHeader className="pb-2 md:pb-3 p-3 md:p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
                   <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: `${event.color}20` }}
                   >
-                    <CalendarDays className="h-5 w-5" style={{ color: event.color }} />
+                    <CalendarDays className="h-4 w-4 md:h-5 md:w-5" style={{ color: event.color }} />
                   </div>
-                  <div>
-                    <CardTitle className="text-base">{event.name}</CardTitle>
-                    <p className="text-xs text-slate-500 mt-0.5">{event.slug}</p>
+                  <div className="min-w-0">
+                    <CardTitle className="text-sm md:text-base truncate">{event.name}</CardTitle>
+                    <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{event.slug}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
                   <Switch
                     checked={event.isActive}
                     onCheckedChange={() => toggleEventActive(event.id)}
+                    className="scale-75 md:scale-100"
                   />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8">
+                        <MoreVertical className="h-3.5 w-3.5 md:h-4 md:w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => window.open(`/booking/${event.slug}`, '_blank')}>
-                        <ExternalLink className="h-4 w-4 mr-2" />
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem onClick={() => window.open(`/booking/${event.slug}`, '_blank')} className="text-sm">
+                        <ExternalLink className="h-3.5 w-3.5 mr-2" />
                         View Booking Page
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => duplicateEvent(event)}>
-                        <Copy className="h-4 w-4 mr-2" />
+                      <DropdownMenuItem onClick={() => duplicateEvent(event)} className="text-sm">
+                        <Copy className="h-3.5 w-3.5 mr-2" />
                         Duplicate
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -318,15 +302,16 @@ export function EventList() {
                           setEditingEvent(event);
                           setShowEventTypeModal(true);
                         }}
+                        className="text-sm"
                       >
-                        <Edit className="h-4 w-4 mr-2" />
+                        <Edit className="h-3.5 w-3.5 mr-2" />
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="text-red-600"
+                        className="text-red-600 text-sm"
                         onClick={() => deleteEvent(event.id)}
                       >
-                        <Trash2 className="h-4 w-4 mr-2" />
+                        <Trash2 className="h-3.5 w-3.5 mr-2" />
                         Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -335,18 +320,18 @@ export function EventList() {
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-3">
-              <p className="text-sm text-slate-600 line-clamp-2">{event.description}</p>
+            <CardContent className="space-y-2 md:space-y-3 p-3 md:p-4 pt-0">
+              <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 line-clamp-2">{event.description}</p>
 
               {/* Stats Row */}
-              <div className="flex items-center space-x-4 text-sm text-slate-500">
+              <div className="flex items-center gap-3 md:gap-4 text-xs md:text-sm text-slate-500 dark:text-slate-400">
                 <span className="flex items-center">
-                  <Clock className="h-4 w-4 mr-1" />
+                  <Clock className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                   {event.duration} min
                 </span>
                 {event.type === 'GROUP' && (
                   <span className="flex items-center">
-                    <Users className="h-4 w-4 mr-1" />
+                    <Users className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                     {event.maxAttendees} max
                   </span>
                 )}
@@ -354,16 +339,16 @@ export function EventList() {
               </div>
 
               {/* Badges Row */}
-              <div className="flex items-center flex-wrap gap-2">
+              <div className="flex items-center flex-wrap gap-1 md:gap-2">
                 {getTypeBadge(event.type)}
-                {!event.isPublic && <Badge variant="outline">Private</Badge>}
-                {event.requiresConfirmation && <Badge variant="outline">Requires Confirmation</Badge>}
+                {!event.isPublic && <Badge variant="outline" className="text-[10px] md:text-xs">Private</Badge>}
+                {event.requiresConfirmation && <Badge variant="outline" className="text-[10px] md:text-xs hidden sm:inline-flex">Requires Confirmation</Badge>}
               </div>
 
               {/* Booking Stats */}
-              <div className="pt-3 border-t flex items-center justify-between text-sm">
-                <span className="text-slate-500">{event.totalBookings} bookings</span>
-                <Button variant="ghost" size="sm" className="text-emerald-600">
+              <div className="pt-2 md:pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs md:text-sm">
+                <span className="text-slate-500 dark:text-slate-400">{event.totalBookings} bookings</span>
+                <Button variant="ghost" size="sm" className="text-emerald-600 h-7 md:h-8 text-xs">
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Book Now
                 </Button>

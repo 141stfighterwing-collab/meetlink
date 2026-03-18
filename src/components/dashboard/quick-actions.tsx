@@ -12,60 +12,60 @@ export function QuickActions() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
+      <CardHeader className="pb-2 md:pb-4">
+        <CardTitle className="text-base md:text-lg font-semibold">Quick Actions</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2 md:space-y-3 pt-0">
         <Button
           variant="outline"
-          className="w-full justify-start"
+          className="w-full justify-start h-9 md:h-10"
           onClick={() => {
             setCurrentView('events');
             setShowEventTypeModal(true);
           }}
         >
           <CalendarDays className="h-4 w-4 mr-2" />
-          Create Event Type
+          <span className="text-sm">Create Event Type</span>
         </Button>
         <Button
           variant="outline"
-          className="w-full justify-start"
+          className="w-full justify-start h-9 md:h-10"
           onClick={() => {
             setCurrentView('contacts');
             setShowContactModal(true);
           }}
         >
           <Users className="h-4 w-4 mr-2" />
-          Add Contact
+          <span className="text-sm">Add Contact</span>
         </Button>
         <Button
           variant="outline"
-          className="w-full justify-start"
+          className="w-full justify-start h-9 md:h-10"
           onClick={() => setCurrentView('integrations')}
         >
           <Link2 className="h-4 w-4 mr-2" />
-          Connect Calendar
+          <span className="text-sm">Connect Calendar</span>
         </Button>
 
         {/* Booking Link */}
-        <div className="pt-3 border-t">
-          <p className="text-sm font-medium text-slate-700 mb-2">Your Booking Link</p>
-          <div className="flex items-center space-x-2">
-            <div className="flex-1 bg-slate-100 rounded-lg px-3 py-2 text-sm text-slate-600 truncate">
+        <div className="pt-2 md:pt-3 border-t border-slate-200 dark:border-slate-700">
+          <p className="text-xs md:text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Your Booking Link</p>
+          <div className="flex items-center gap-1 md:gap-2">
+            <div className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">
               {bookingLink}
             </div>
-            <Button size="icon" variant="ghost">
-              <Copy className="h-4 w-4" />
+            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-9 md:w-9 flex-shrink-0">
+              <Copy className="h-3.5 w-3.5 md:h-4 md:w-4" />
             </Button>
-            <Button size="icon" variant="ghost">
-              <ExternalLink className="h-4 w-4" />
+            <Button size="icon" variant="ghost" className="h-8 w-8 md:h-9 md:w-9 flex-shrink-0 hidden sm:flex">
+              <ExternalLink className="h-3.5 w-3.5 md:h-4 md:w-4" />
             </Button>
           </div>
         </div>
 
-        <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
+        <Button className="w-full bg-emerald-600 hover:bg-emerald-700 h-9 md:h-10">
           <Share2 className="h-4 w-4 mr-2" />
-          Share Booking Page
+          <span className="text-sm">Share Booking Page</span>
         </Button>
       </CardContent>
     </Card>

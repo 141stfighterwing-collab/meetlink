@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Video, MapPin, MoreHorizontal } from 'lucide-react';
+import { Clock, Video, MapPin, MoreHorizontal, Calendar } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,58 +63,67 @@ const upcomingBookings = [
 export function UpcomingBookings() {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-semibold">Today&apos;s Schedule</CardTitle>
-        <Button variant="ghost" size="sm" className="text-emerald-600">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 md:pb-4">
+        <CardTitle className="text-base md:text-lg font-semibold">Today&apos;s Schedule</CardTitle>
+        <Button variant="ghost" size="sm" className="text-emerald-600 h-8 text-xs md:text-sm">
           View All
         </Button>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="pt-0 md:pt-2">
+        <div className="space-y-2 md:space-y-3">
           {upcomingBookings.map((booking) => (
             <div
               key={booking.id}
-              className="flex items-start space-x-4 p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+              className="flex items-start gap-2 md:gap-4 p-3 md:p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
-              {/* Time Column */}
-              <div className="flex-shrink-0 w-20">
-                <p className="text-sm font-semibold text-slate-800">
-                  {format(parseISO(booking.startTime), 'h:mm a')}
+              {/* Time Column - Hidden on small mobile */}
+              <div className="hidden sm:flex flex-shrink-0 flex-col items-center w-16">
+                <p className="text-sm font-semibold text-slate-800 dark:text-white">
+                  {format(parseISO(booking.startTime), 'h:mm')}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {format(parseISO(booking.endTime), 'h:mm a')}
                 </p>
               </div>
 
               {/* Color Indicator */}
               <div
-                className="w-1 h-16 rounded-full flex-shrink-0"
+                className="w-1 h-12 md:h-14 rounded-full flex-shrink-0"
                 style={{ backgroundColor: booking.color }}
               />
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2">
-                  <p className="font-medium text-slate-800">{booking.guestName}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-medium text-slate-800 dark:text-white text-sm md:text-base truncate">{booking.guestName}</p>
                   <Badge
                     variant={booking.status === 'CONFIRMED' ? 'default' : 'secondary'}
-                    className={booking.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-700' : ''}
+                    className={`text-[10px] md:text-xs ${booking.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : ''}`}
                   >
                     {booking.status}
                   </Badge>
                 </div>
-                <p className="text-sm text-slate-600 mt-1">{booking.eventTypeName}</p>
-                <div className="flex items-center space-x-4 mt-2 text-sm text-slate-500">
+                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 mt-0.5 truncate">{booking.eventTypeName}</p>
+                
+                {/* Mobile Time - Only on small screens */}
+                <div className="flex sm:hidden items-center gap-3 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="flex items-center">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {format(parseISO(booking.startTime), 'h:mm')} - {format(parseISO(booking.endTime), 'h:mm a')}
+                  </span>
+                </div>
+                
+                <div className="hidden sm:flex items-center gap-4 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
                   <span className="flex items-center">
                     {booking.location === 'Phone Call' ? (
-                      <MapPin className="h-4 w-4 mr-1" />
+                      <MapPin className="h-3.5 w-3.5 mr-1" />
                     ) : (
-                      <Video className="h-4 w-4 mr-1" />
+                      <Video className="h-3.5 w-3.5 mr-1" />
                     )}
                     {booking.location}
                   </span>
                   <span className="flex items-center">
-                    <Clock className="h-4 w-4 mr-1" />
+                    <Clock className="h-3.5 w-3.5 mr-1" />
                     {Math.round(
                       (parseISO(booking.endTime).getTime() - parseISO(booking.startTime).getTime()) / 60000
                     )}{' '}
@@ -123,30 +132,31 @@ export function UpcomingBookings() {
                 </div>
               </div>
 
-              {/* Avatar */}
-              <Avatar className="h-10 w-10 flex-shrink-0">
-                <AvatarFallback className="bg-slate-200 text-slate-600">
-                  {booking.guestName
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')}
-                </AvatarFallback>
-              </Avatar>
+              {/* Avatar & Actions */}
+              <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                <Avatar className="h-8 w-8 md:h-10 md:w-10">
+                  <AvatarFallback className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs md:text-sm">
+                    {booking.guestName
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')}
+                  </AvatarFallback>
+                </Avatar>
 
-              {/* Actions */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="flex-shrink-0">
-                    <MoreHorizontal className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>View Details</DropdownMenuItem>
-                  <DropdownMenuItem>Reschedule</DropdownMenuItem>
-                  <DropdownMenuItem>Send Reminder</DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-600">Cancel</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem className="text-sm">View Details</DropdownMenuItem>
+                    <DropdownMenuItem className="text-sm">Reschedule</DropdownMenuItem>
+                    <DropdownMenuItem className="text-sm">Send Reminder</DropdownMenuItem>
+                    <DropdownMenuItem className="text-red-600 text-sm">Cancel</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           ))}
         </div>

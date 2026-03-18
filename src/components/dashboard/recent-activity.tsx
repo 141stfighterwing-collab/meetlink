@@ -1,7 +1,6 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { Calendar, UserPlus, Settings, Bell } from 'lucide-react';
 
@@ -43,21 +42,21 @@ const activities = [
 export function RecentActivity() {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
+      <CardHeader className="pb-2 md:pb-4">
+        <CardTitle className="text-base md:text-lg font-semibold">Recent Activity</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="pt-0">
+        <div className="space-y-3 md:space-y-4">
           {activities.map((activity) => {
             const Icon = activity.icon;
             return (
-              <div key={activity.id} className="flex items-start space-x-3">
-                <div className={`${activity.color} p-2 rounded-lg flex-shrink-0`}>
-                  <Icon className="h-4 w-4 text-white" />
+              <div key={activity.id} className="flex items-start gap-2 md:gap-3">
+                <div className={`${activity.color} p-1.5 md:p-2 rounded-lg flex-shrink-0`}>
+                  <Icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-slate-700">{activity.message}</p>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs md:text-sm text-slate-700 dark:text-slate-300 line-clamp-2">{activity.message}</p>
+                  <p className="text-[10px] md:text-xs text-slate-400 mt-0.5">
                     {formatDistanceToNow(activity.time, { addSuffix: true })}
                   </p>
                 </div>
