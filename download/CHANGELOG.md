@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-01-15
+
+### Added
+
+#### Mobile Responsive Design
+- **Mobile Navigation Drawer**: Slide-in hamburger menu for mobile devices replacing sidebar
+- **Responsive Dashboard Stats**: 2-column grid on mobile, 4-column on desktop
+- **Touch-Friendly Components**: Increased tap targets and spacing for mobile interaction
+- **Mobile-Optimized Layouts**: All dashboard pages adapt seamlessly to mobile screens
+- **Mobile Footer**: Minimal footer with essential quick links for mobile users
+
+#### Environment Variables Configuration UI
+- **Settings Config Tab**: New tab in Settings panel for environment configuration
+- **Environment Variables Editor**: Full-featured editor for modifying .env values
+- **Categorized Variables**: Variables organized by category (App, Database, Auth, Email, Calendar, Security, Logging)
+- **Password Masking**: Sensitive values hidden by default with reveal toggle
+- **Save & Reload**: Save changes and reload application from UI
+- **Backup Support**: Automatic backup before changes with restore capability
+- **API Endpoint**: `/api/config/env` endpoint for reading and writing environment configuration
+
+#### PowerShell Deployment Script v3.0.0
+- **One-Click Mode**: `-OneClick` parameter for fully automated deployment
+- **Auto-Configuration**: All settings pre-configured with sensible defaults
+- **Temporary Admin Password**: Memorable auto-generated password for initial access
+- **Password Display**: Clear, impossible-to-miss password display during deployment
+- **Credentials File**: Temp credentials saved to `config\TEMP_ADMIN_CREDENTIALS.txt`
+- **Password Change Reminder**: Multiple reminders to change password after first login
+- **Environment Variable Pre-fill**: All known values auto-filled in .env file
+- **Docker Environment Support**: Separate `.env.docker` for container networking
+
+### Changed
+- **Mobile Navigation**: Desktop sidebar now hidden on mobile, replaced with slide-in drawer
+- **Header Component**: Added hamburger menu for mobile, responsive logo display
+- **Dashboard Components**: All updated with responsive breakpoints
+- **Theme Support**: All new components support the 6 built-in themes
+
+---
+
 ## [1.0.0] - 2025-03-17
 
 ### Added
@@ -131,7 +169,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Upcoming Features (Roadmap)
 
-### [1.1.0] - Planned
+### [1.2.0] - Planned
+- [x] ~~Mobile responsive design~~ ✅ Completed in v1.1.0
 - Email notification system integration
 - SMS notification via Twilio
 - Zoom/Teams OAuth integration
@@ -139,7 +178,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Team scheduling
 - Analytics dashboard
 
-### [1.2.0] - Planned
+### [1.3.0] - Planned
 - CRM integrations (Salesforce, HubSpot)
 - Webhook API
 - Public API for developers
@@ -159,6 +198,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Release Date | Major Changes |
 |---------|--------------|---------------|
+| 1.1.0 | 2025-01-15 | Mobile responsive design, Environment Variables UI, PowerShell v3.0.0 |
 | 1.0.0 | 2025-03-17 | Initial release with core scheduling features |
 
 ---

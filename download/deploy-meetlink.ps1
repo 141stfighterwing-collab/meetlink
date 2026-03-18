@@ -70,7 +70,7 @@ param(
 
 # Version and metadata
 $ScriptVersion = "3.0.0"
-$MeetLinkVersion = "1.0.0"
+$MeetLinkVersion = "1.1.0"
 $RepoUrl = "https://github.com/141stfighterwing-collab/meetlink.git"
 
 # Error handling

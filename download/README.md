@@ -6,7 +6,7 @@
 
 **A privacy-focused, self-hosted alternative to Calendly**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-emerald.svg)](https://github.com/meetlink/meetlink)
+[![Version](https://img.shields.io/badge/version-1.1.0-emerald.svg)](https://github.com/meetlink/meetlink)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](docker-compose.yml)
 [![PostgreSQL](https://img.shields.io/badge/postgresql-16-blue.svg)](https://www.postgresql.org/)
