@@ -5,6 +5,39 @@ All notable changes to MeetLink will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-03-21
+
+### Added
+
+#### ICS Calendar File Generation
+- **Add to Calendar Button**: Dropdown menu with multiple calendar options
+- **ICS File Download**: Generate and download standard ICS files for any calendar app
+- **Google Calendar Integration**: Direct link to add events to Google Calendar
+- **Outlook Integration**: Support for both personal Outlook and Office 365
+- **Yahoo Calendar Integration**: Direct link to add events to Yahoo Calendar
+- **API Endpoint**: `/api/bookings/ics` endpoint for ICS file generation
+- **Automatic Reminders**: ICS files include 15-minute reminder alerts
+- **Video Link Support**: Meeting links automatically included in calendar events
+- **Join Meeting Button**: Quick access to video conference links from booking details
+
+#### Technical Details
+
+##### New Components
+- `add-to-calendar-button.tsx`: Dropdown component for calendar selection
+- `/api/bookings/ics/route.ts`: API endpoint for ICS file generation
+
+##### New Utilities
+- `lib/ics.ts`: Complete ICS file generation library with:
+  - ICS content generation (RFC 5545 compliant)
+  - Filename generation
+  - Calendar URL generators (Google, Outlook, Office 365, Yahoo)
+  - File download functionality
+
+##### Updated Components
+- `booking-calendar.tsx`: Added "Add to Calendar" and "Join Meeting" buttons
+
+---
+
 ## [1.1.0] - 2025-01-15
 
 ### Added
@@ -160,7 +193,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Release Date | Type | Description |
 |---------|--------------|------|-------------|
-| 1.1.0 | 2025-01-15 | Minor | Mobile responsive design, Environment Variables UI, PowerShell v3.0.0 |
+| 1.2.0 | 2025-03-21 | Minor | ICS calendar file generation, Add to Calendar button |
+| 1.1.0 | 2025-01-15 | Minor | Mobile responsive design, Environment Variables UI, PowerShell v3.1.0 |
 | 1.0.0 | 2025-01-15 | Major | Initial release |
 
 ---

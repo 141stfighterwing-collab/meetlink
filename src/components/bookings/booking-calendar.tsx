@@ -45,6 +45,7 @@ import {
   parseISO,
 } from 'date-fns';
 import type { CalendarView, Booking } from '@/types';
+import { AddToCalendarButton } from './add-to-calendar-button';
 
 const mockBookings: Booking[] = [
   {
@@ -499,6 +500,34 @@ export function BookingCalendar() {
                 <div className="p-3 bg-slate-50 rounded-lg">
                   <p className="text-sm text-slate-600">{selectedBooking.guestNotes}</p>
                 </div>
+              )}
+
+              {/* Add to Calendar Button */}
+              <AddToCalendarButton
+                event={{
+                  title: `Meeting with ${selectedBooking.guestName}`,
+                  startTime: selectedBooking.startTime,
+                  endTime: selectedBooking.endTime,
+                  attendeeName: selectedBooking.guestName,
+                  attendeeEmail: selectedBooking.guestEmail,
+                  location: selectedBooking.location || undefined,
+                  videoLink: selectedBooking.videoLink || undefined,
+                  description: selectedBooking.guestNotes || undefined,
+                  timezone: selectedBooking.timezone || 'UTC',
+                }}
+                variant="default"
+                className="w-full"
+              />
+
+              {selectedBooking.videoLink && (
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.open(selectedBooking.videoLink, '_blank')}
+                >
+                  <Video className="h-4 w-4 mr-2" />
+                  Join Meeting
+                </Button>
               )}
 
               <div className="flex space-x-2">

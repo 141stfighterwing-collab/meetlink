@@ -2,7 +2,7 @@
 
 > **Self-hosted meeting scheduler, appointment booking system, and calendar management platform. A free, open-source Calendly alternative with enterprise-grade features.**
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg?style=flat-square)](https://github.com/141stfighterwing-collab/meetlink)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg?style=flat-square)](https://github.com/141stfighterwing-collab/meetlink)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg?style=flat-square)](docker-compose.yml)
 [![PostgreSQL](https://img.shields.io/badge/postgresql-15%2B-blue.svg?style=flat-square)](https://www.postgresql.org/)
@@ -631,7 +631,8 @@ Examples:
 
 | Version | Release Date | Status |
 |---------|--------------|--------|
-| 1.1.0 | 2025-01-15 | Current (Stable) |
+| 1.2.0 | 2025-03-21 | Current (Stable) |
+| 1.1.0 | 2025-01-15 | Stable |
 | 1.0.0 | 2025-01-15 | Initial Release |
 
 ### Checking Your Version

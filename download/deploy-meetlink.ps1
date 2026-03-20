@@ -1,6 +1,6 @@
 # MeetLink 1-Click Deployment Script for Windows
-# Version: 3.1.0
-# Description: Complete automated deployment with auto-configuration, temp admin passwords, Environment Variables UI integration, and comprehensive validation
+# Version: 3.2.0
+# Description: Complete automated deployment with auto-configuration, temp admin passwords, Environment Variables UI integration, ICS calendar file generation, and comprehensive validation
 # Author: MeetLink Team
 # License: MIT
 
@@ -69,8 +69,8 @@ param(
 )
 
 # Version and metadata
-$ScriptVersion = "3.1.0"
-$MeetLinkVersion = "1.1.0"
+$ScriptVersion = "3.2.0"
+$MeetLinkVersion = "1.2.0"
 $RepoUrl = "https://github.com/141stfighterwing-collab/meetlink.git"
 
 # Error handling
