@@ -235,37 +235,18 @@ If you were using a development version before the 1.0.0 release:
 
 ## Roadmap
 
-### [1.1.0] - Planned
+See [ROADMAP.md](ROADMAP.md) for detailed feature planning and timeline.
 
-#### New Features
-- [x] ~~Mobile responsive improvements~~ ✅ Completed in v1.1.0
-- [ ] Team scheduling with round-robin assignment
-- [ ] Payment integration (Stripe, PayPal)
-- [ ] SMS notifications via Twilio
-- [ ] Custom booking pages with branding
-- [ ] Calendar sync improvements
+### Quick Overview
 
-#### Enhancements
-- [x] ~~Mobile responsive improvements~~ ✅ Completed in v1.1.0
-- [ ] Performance optimizations
-- [ ] Accessibility (WCAG 2.1 AA)
-- [ ] Internationalization (i18n)
-
-### [1.2.0] - Planned
-
-#### New Features
-- [ ] Zapier integration
-- [ ] Webhook management UI
-- [ ] Advanced analytics dashboard
-- [ ] Custom themes builder
-- [ ] API rate limiting per user
-
-### [2.0.0] - Future
-
-#### Breaking Changes
-- [ ] API v2 with GraphQL support
-- [ ] Microservices architecture
-- [ ] Kubernetes deployment manifests
+| Version | Status | Key Features |
+|---------|--------|-------------|
+| 1.0.0 | ✅ Released | Core features, Docker deployment |
+| 1.1.0 | ✅ Released | Mobile responsive, Env config UI, PowerShell v3.1.0 |
+| 1.2.0 | ✅ Released | ICS calendar file generation, Add to Calendar button |
+| 1.3.0 | 🔜 Planned | Team scheduling, Payment integration |
+| 1.4.0 | 📋 Planned | Analytics dashboard, Custom themes |
+| 2.0.0 | 🎯 Future | GraphQL API, Kubernetes support |
 
 ---
 
